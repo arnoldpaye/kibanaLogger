@@ -99,21 +99,20 @@ function renderReport(message) {
     var textBack = document.createTextNode("Atras");
     nodeBack.appendChild(textBack);
     report.appendChild(nodeBack);
-    // *************************************************************************
 
-    // test json.human.js ******************************************************
-    /*var rpt = JsonHuman.format(message);
-    report.appendChild(rpt);*/
-    // *************************************************************************
-
-    // test jjsonviewer.js *****************************************************
-    var jjson = document.createElement("div");
-    jjson.setAttribute('id', "jjson");
-    jjson.setAttribute('class', "jjson");
-    report.appendChild(jjson);
-    $('#jjson').jJsonViewer(message, {expanded: true});
-    // *************************************************************************
-
+    var asTable = false;
+    if (asTable) {
+        // test json.human.js
+        var rpt = JsonHuman.format(message);
+        report.appendChild(rpt);
+    } else {
+        // test jjsonviewer.js
+        var jjson = document.createElement("div");
+        jjson.setAttribute('id', "jjson");
+        jjson.setAttribute('class', "jjson");
+        report.appendChild(jjson);
+        $('#jjson').jJsonViewer(message, {expanded: true});
+    }
 
     errors.setAttribute('style', "display:none;");
     report.setAttribute('style', "display:block;");
