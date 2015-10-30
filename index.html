@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript" src="./js/main.js"></script>
+    <script type="text/javascript" src="./js/json.human.js"></script>
+
+    <script type="text/javascript" src="./js/jquery.js"></script>
+    <script type="text/javascript" src="./js/jjsonviewer.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="./css/json.human.css" />
+
+    <link rel="stylesheet" type="text/css" href="./css/jjsonviewer.css" />
+</head>
+<body>
+    <h1>Kibana NO production: http://172.20.17.80:9200/ (log-01sc8:9200/)</h1>
+    <label>Query</label>
+    <input type="text" style="width:60%" id="txtQuery" value='application:"ST7" AND environment:"qa1" AND type:"jsexception"' />
+    <button id="btnSearch" onclick="search()">Search</button>
+    <!-- Errors -->
+    <div id="errors">
+
+    </div>
+    <!-- Report -->
+    <div id="report" style="display:none;">
+    </div>
+</body>
+</html>
