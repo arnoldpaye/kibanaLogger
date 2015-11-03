@@ -99,6 +99,7 @@ function renderReport(message) {
     var textBack = document.createTextNode("Atras");
     nodeBack.appendChild(textBack);
     report.appendChild(nodeBack);
+    // *************************************************************************
 
     var asTable = false;
     if (asTable) {
