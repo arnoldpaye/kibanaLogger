@@ -55,8 +55,8 @@ function search() {
     var yesterday = new Date(today.getTime() - 24*60*60*1000);
     var query = createQuery(queryString, yesterday.getTime(), today.getTime());
 
-    var todayUrl = elasticSearchHost + "logstash-2015.10.30/_search?source=" + JSON.stringify(query);
-    var yerderdayUrl = elasticSearchHost + "logstash-2015.10.29/_search?source=" + JSON.stringify(query);
+    var todayUrl = elasticSearchHost + "logstash-" + formatDate(today) + "/_search?source=" + JSON.stringify(query);
+    var yerderdayUrl = elasticSearchHost + "logstash-" + formatDate(yesterday) + "/_search?source=" + JSON.stringify(query);
     // *************************************************************************
 
     var todayErrors = promisedRequest('GET', todayUrl);
@@ -196,6 +196,11 @@ function promisedRequest(method, url) {
             console.log("onload");
         };
 
+        xhr.onerror = function() {
+            // TODO: reject it
+            console.log("onerror");
+        }
+
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
@@ -211,4 +216,19 @@ function promisedRequest(method, url) {
         xhr.send();
     });
     return promise;
+}
+
+/**
+* Given a date return a formatted string as: "YYYY.mm.dd",
+* for example: "2015.11.03"
+*/
+function formatDate(date) {
+    var year = date.getFullYear();
+    var month = date.getMonth();
+    var day = date.getDate();
+    console.log(year, month, day);
+    month = month + 1;
+    if (month < 11) month = "0" + month;
+    if (day < 10) day = "0" + day;
+    return year + "." + month + "." + day;
 }
