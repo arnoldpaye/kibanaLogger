@@ -33,7 +33,7 @@ function createQuery(queryString, from, to) {
 
 // global exceptions array
 var exceptions = [];
-
+var htmlExceptions = [];
 /**
 * Search.
 */
@@ -72,6 +72,28 @@ function search() {
             renderExceptions(exceptions);
         });
     })
+}
+
+
+/**
+* Filter
+*/
+function filter() {
+    var txtFilter = document.getElementById("txtFilter").value;
+    txtFilter = txtFilter.trim();
+    var evaluation = "message" + "." + txtFilter;
+    if (txtFilter) {
+        console.log("text filter", txtFilter);
+        htmlExceptions.forEach(function(exception) {
+            var message = exception._source.message;
+            if (typeof message == "object") {
+                if (eval(evaluation)) {
+                    console.log("Match", exception);
+                }
+            }
+        });
+    }
+    
 }
 
 /**
@@ -144,7 +166,7 @@ function renderExceptions(exceptions) {
     back();
 
     // just display at most 100 records
-    var htmlExceptions = exceptions.slice(0, 100);
+    htmlExceptions = exceptions.slice(0, 100);
 
     htmlExceptions.forEach(function(exception) {
         var source = exception._source;
@@ -152,6 +174,7 @@ function renderExceptions(exceptions) {
 
         var text;
         var linkNode;
+        // TODO: check this
         if (source.message) {
             try {
                 source.message = JSON.parse(source.message);
@@ -164,6 +187,7 @@ function renderExceptions(exceptions) {
                 var textNode = document.createTextNode(text);
                 linkNode.appendChild(textNode);
             } catch (e) {
+                console.log(e, source.message);
                 text = source.message;
                 linkNode = document.createTextNode(text);
             }
@@ -182,6 +206,20 @@ function renderExceptions(exceptions) {
     total.appendChild(textTotal);
     errors.appendChild(total);
     // *************************************************************************
+
+    // add filter input ********************************************************
+    var txtfilter = document.createElement("input");
+    txtfilter.setAttribute('style', "width:40%");
+    txtfilter.setAttribute('id', "txtFilter");
+    txtfilter.setAttribute('value', 'OccurredOn == "2015-11-04T15:51:46.799Z"');
+    var btnFilter = document.createElement("button");
+    btnFilter.setAttribute('onclick', "filter()");
+    var lblFilter = document.createTextNode("Filter");
+    errors.appendChild(txtfilter);
+    btnFilter.appendChild(lblFilter);
+    errors.appendChild(btnFilter);
+    // *************************************************************************
+
     errors.appendChild(errorsList);
 }
 
