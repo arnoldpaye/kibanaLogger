@@ -154,15 +154,15 @@ function renderExceptions(exceptions) {
         var linkNode;
         if (source.message) {
             try {
-            source.message = JSON.parse(source.message);
-            text = source.message.Details.Error.Message;
-            // create error link ***********************************************
-            linkNode = document.createElement("a");
-            linkNode.setAttribute('href', "#");
-            linkNode.setAttribute('onclick', "handleMessage(" + JSON.stringify(source.message) + ")");
-            // *****************************************************************
-            var textNode = document.createTextNode(text);
-            linkNode.appendChild(textNode);
+                source.message = JSON.parse(source.message);
+                text = source.message.Details.Error.Message;
+                // create error link ***********************************************
+                linkNode = document.createElement("a");
+                linkNode.setAttribute('href', "#");
+                linkNode.setAttribute('onclick', "handleMessage(" + JSON.stringify(source.message) + ")");
+                // *****************************************************************
+                var textNode = document.createTextNode(text);
+                linkNode.appendChild(textNode);
             } catch (e) {
                 text = source.message;
                 linkNode = document.createTextNode(text);
@@ -227,7 +227,6 @@ function formatDate(date) {
     var year = date.getFullYear();
     var month = date.getMonth();
     var day = date.getDate();
-    console.log(year, month, day);
     month = month + 1;
     if (month < 11) month = "0" + month;
     if (day < 10) day = "0" + day;
