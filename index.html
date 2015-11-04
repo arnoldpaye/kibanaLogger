@@ -15,11 +15,20 @@
 </head>
 <body>
     <h1>Kibana NO production: http://172.20.17.80:9200/ (log-01sc8:9200/)</h1>
-    <input type="text" style="width:60%" id="txtQuery" value='application:"ST7" AND environment:"qa1" AND type:"jsexception"' />
-    <button id="btnSearch" onclick="search()">Search</button>
+    <!-- Search -->
+    <div id="divSearch">
+        <input type="text" style="width:60%" id="txtQuery" value='application:"ST7" AND environment:"qa1" AND type:"jsexception"' />
+        <button id="btnSearch" onclick="search()">Search</button>
+    </div><br />
     <!-- Errors -->
-    <div id="errors">
-
+    <div id="divErrorsContainer">
+        <!-- Filter -->
+        <div id="divFilter" style="display:none;">
+            <input type="text" style="width:30%" id="txtFilter" value='OccurredOn == "2015-11-04T15:51:46.799Z"' />
+            <button id="btnFilter" onclick="filter()">Filter</button>
+        </div><br />
+        <div id="divErrors">
+        </div>
     </div>
     <!-- Report -->
     <div id="report" style="display:none;">

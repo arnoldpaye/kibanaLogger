@@ -33,7 +33,6 @@ function createQuery(queryString, from, to) {
 
 // global exceptions array
 var exceptions = [];
-var htmlExceptions = [];
 /**
 * Search.
 */
@@ -42,8 +41,10 @@ function search() {
     var queryString = document.getElementById("txtQuery").value;
     // clean exceptions
     exceptions = [];
-    var errors = document.getElementById("errors");
+    var errors = document.getElementById("divErrors");
+    var filter = document.getElementById("divFilter");
     errors.innerHTML = "";
+    filter.setAttribute('style', "display:none;");
 
     queryString = queryString.trim();
     if (queryString === "") queryString = "*";
@@ -69,6 +70,22 @@ function search() {
             console.log("total yesterday", records.length);
             exceptions = exceptions.concat(records);
             console.log("total errors", exceptions.length);
+
+            // Try to convert message property to an object
+            // TODO: this should be done with a fuction
+            exceptions.forEach(function(exception) {
+                if (exception._source.message) {
+                    var message = exception._source.message;
+                    try {
+                        exception._source.message = JSON.parse(message);
+                    } catch (e) {
+                        console.log(e, exception._source.message);
+                    }
+                } else {
+                    console.log("The exception doesn't have a message property.");
+                }
+            });
+
             renderExceptions(exceptions);
         });
     })
@@ -84,16 +101,19 @@ function filter() {
     var evaluation = "message" + "." + txtFilter;
     if (txtFilter) {
         console.log("text filter", txtFilter);
-        htmlExceptions.forEach(function(exception) {
+        var filteredExceptions = [];
+        exceptions.forEach(function(exception) {
             var message = exception._source.message;
             if (typeof message == "object") {
                 if (eval(evaluation)) {
-                    console.log("Match", exception);
+                    filteredExceptions.push(exception);
                 }
             }
         });
+        renderExceptions(filteredExceptions);
+    } else if (txtFilter == "") {
+        renderExceptions(exceptions);
     }
-    
 }
 
 /**
@@ -110,8 +130,9 @@ function handleMessage(message) {
 * @param {object} message, exception details.
 */
 function renderReport(message) {
-    var errors = document.getElementById("errors");
+    var errorsContainer = document.getElementById("divErrorsContainer");
     var report = document.getElementById("report");
+    // clean report
     report.innerHTML = "";
 
     // create back link ********************************************************
@@ -137,14 +158,14 @@ function renderReport(message) {
         $('#jjson').jJsonViewer(message, {expanded: true});
     }
 
-    errors.setAttribute('style', "display:none;");
+    errorsContainer.setAttribute('style', "display:none;");
     report.setAttribute('style', "display:block;");
 }
 
 function back() {
-    var errors = document.getElementById("errors");
+    var errorsContainer = document.getElementById("divErrorsContainer");
     var report = document.getElementById("report");
-    errors.setAttribute('style', "display:block;");
+    errorsContainer.setAttribute('style', "display:block;");
     report.setAttribute('style', "display:none;");
 }
 
@@ -161,12 +182,15 @@ function back() {
   }
 */
 function renderExceptions(exceptions) {
-    var errors = document.getElementById("errors");
+    var errors = document.getElementById("divErrors");
+    var filter = document.getElementById("divFilter");
+    errors.innerHTML = "";
     var errorsList = document.createElement("ul");
-    back();
 
     // just display at most 100 records
-    htmlExceptions = exceptions.slice(0, 100);
+    var htmlExceptions = exceptions.slice(0, 100);
+    console.log("exceptions", exceptions.length);
+    console.log("exceptions to display", htmlExceptions.length);
 
     htmlExceptions.forEach(function(exception) {
         var source = exception._source;
@@ -174,20 +198,17 @@ function renderExceptions(exceptions) {
 
         var text;
         var linkNode;
-        // TODO: check this
         if (source.message) {
-            try {
-                source.message = JSON.parse(source.message);
+                if (typeof source.message == "object") {
                 text = source.message.Details.Error.Message;
                 // create error link ***********************************************
-                linkNode = document.createElement("a");
+                linkNode = document.createElement('a');
                 linkNode.setAttribute('href', "#");
                 linkNode.setAttribute('onclick', "handleMessage(" + JSON.stringify(source.message) + ")");
                 // *****************************************************************
                 var textNode = document.createTextNode(text);
                 linkNode.appendChild(textNode);
-            } catch (e) {
-                console.log(e, source.message);
+            } else {
                 text = source.message;
                 linkNode = document.createTextNode(text);
             }
@@ -206,21 +227,9 @@ function renderExceptions(exceptions) {
     total.appendChild(textTotal);
     errors.appendChild(total);
     // *************************************************************************
-
-    // add filter input ********************************************************
-    var txtfilter = document.createElement("input");
-    txtfilter.setAttribute('style', "width:40%");
-    txtfilter.setAttribute('id', "txtFilter");
-    txtfilter.setAttribute('value', 'OccurredOn == "2015-11-04T15:51:46.799Z"');
-    var btnFilter = document.createElement("button");
-    btnFilter.setAttribute('onclick', "filter()");
-    var lblFilter = document.createTextNode("Filter");
-    errors.appendChild(txtfilter);
-    btnFilter.appendChild(lblFilter);
-    errors.appendChild(btnFilter);
-    // *************************************************************************
-
     errors.appendChild(errorsList);
+    
+    filter.setAttribute('style', "display:block;");
 }
 
 /**
