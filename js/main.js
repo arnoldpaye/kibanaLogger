@@ -98,22 +98,22 @@ function search() {
 function filter() {
     var txtFilter = document.getElementById("txtFilter").value;
     txtFilter = txtFilter.trim();
-    var evaluation = "message" + "." + txtFilter;
-    if (txtFilter) {
-        console.log("text filter", txtFilter);
-        var filteredExceptions = [];
-        exceptions.forEach(function(exception) {
-            var message = exception._source.message;
-            if (typeof message == "object") {
-                if (eval(evaluation)) {
-                    filteredExceptions.push(exception);
-                }
+    if(!txtFilter) txtFilter = "true";
+    
+    var predFn = new Function('ro, rs', 'return ('+ txtFilter +')');
+
+    console.log("text filter", txtFilter);
+    var filteredExceptions = [];
+    exceptions.forEach(function(exception) {
+        var message = exception._source.message;
+        if (typeof message == "object") {
+            if (predFn(message, JSON.stringify(message))) {
+                filteredExceptions.push(exception);
             }
-        });
-        renderExceptions(filteredExceptions);
-    } else if (txtFilter == "") {
-        renderExceptions(exceptions);
-    }
+
+        }
+    });
+    renderExceptions(filteredExceptions);
 }
 
 /**
