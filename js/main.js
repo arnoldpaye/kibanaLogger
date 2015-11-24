@@ -65,6 +65,9 @@ function search() {
 
     var query = createQuery(queryString, from.getTime(), to.getTime());
 
+    console.log("from", formatDate(from));
+    console.log("to", formatDate(to));
+
     var fromUrl = elasticSearchHost + "logstash-" + formatDate(from) + "/_search?source=" + JSON.stringify(query);
     var toUrl = elasticSearchHost + "logstash-" + formatDate(to) + "/_search?source=" + JSON.stringify(query);
     // *************************************************************************
@@ -284,7 +287,7 @@ function formatDate(date) {
     var month = date.getMonth();
     var day = date.getDate();
     month = month + 1;
-    if (month < 11) month = "0" + month;
+    if (month < 10) month = "0" + month;
     if (day < 10) day = "0" + day;
     return year + "." + month + "." + day;
 }
