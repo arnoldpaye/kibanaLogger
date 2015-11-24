@@ -1,6 +1,14 @@
 /* ELASTIC SEARCH NON PRODUCTION ENVIRONMENT */
 var elasticSearchHost = "http://172.20.17.80:9200/";
 
+// get today date value
+var today = new Date();
+var todayDate = today.toISOString().split('T')[0];
+var todayTime = today.toISOString().split('T')[1];
+
+// set txtDate with today date as default value
+document.getElementById('txtDate').value = todayDate;
+
 /**
 * Create query.
 * @param {string} queryString
@@ -52,22 +60,23 @@ function search() {
     console.log("queryString", queryString);
 
     // build urls **************************************************************
-    var today = new Date();
-    var yesterday = new Date(today.getTime() - 24*60*60*1000);
-    var query = createQuery(queryString, yesterday.getTime(), today.getTime());
+    var to = new Date(document.getElementById('txtDate').value + "T" + todayTime);
+    var from = new Date(to.getTime() - 24*60*60*1000);
 
-    var todayUrl = elasticSearchHost + "logstash-" + formatDate(today) + "/_search?source=" + JSON.stringify(query);
-    var yerderdayUrl = elasticSearchHost + "logstash-" + formatDate(yesterday) + "/_search?source=" + JSON.stringify(query);
+    var query = createQuery(queryString, from.getTime(), to.getTime());
+
+    var fromUrl = elasticSearchHost + "logstash-" + formatDate(from) + "/_search?source=" + JSON.stringify(query);
+    var toUrl = elasticSearchHost + "logstash-" + formatDate(to) + "/_search?source=" + JSON.stringify(query);
     // *************************************************************************
 
-    var todayErrors = promisedRequest('GET', todayUrl);
-    var yesterdayErrors = promisedRequest('GET', yerderdayUrl);
+    var fromErrors = promisedRequest('GET', fromUrl);
+    var toErrors = promisedRequest('GET', toUrl);
 
-    todayErrors.then(function(records) {
-        console.log("total today", records.length);
+    fromErrors.then(function(records) {
+        console.log("total from", records.length);
         exceptions = exceptions.concat(records);
-        yesterdayErrors.then(function(records) {
-            console.log("total yesterday", records.length);
+        toErrors.then(function(records) {
+            console.log("total to", records.length);
             exceptions = exceptions.concat(records);
             console.log("total errors", exceptions.length);
 

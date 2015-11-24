@@ -4,7 +4,6 @@
     <title></title>
     <!-- js dependencies -->
     <script type="text/javascript" src="./js/jquery-1.11.3.js"></script>
-    <script type="text/javascript" src="./js/main.js"></script>
 
     <!-- js librarries -->
     <script type="text/javascript" src="./js/json.human.js"></script>
@@ -18,6 +17,7 @@
     <!-- Search -->
     <div id="divSearch">
         <input type="text" style="width:60%" id="txtQuery" value='application:"ST7" AND environment:"qa1" AND type:"jsexception"' />
+        <input type="text" id="txtDate" />
         <button id="btnSearch" onclick="search()">Search</button>
     </div><br />
     <!-- Errors -->
@@ -33,5 +33,6 @@
     <!-- Report -->
     <div id="report" style="display:none;">
     </div>
+    <script type="text/javascript" src="./js/main.js"></script>
 </body>
 </html>
