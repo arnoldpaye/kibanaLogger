@@ -87,22 +87,16 @@ function render(exceptions) {
 * @param {object} message, exception details.
 **/
 function renderReport(message) {
-    divReport.innerHTML = "";
+    cleanReport();
 
-    // create back link ********************************************************
-    var nodeBack = document.createElement("a");
-    nodeBack.setAttribute('href', "#");
-    nodeBack.setAttribute('onclick', "back()");
-    var textBack = document.createTextNode("Atras");
-    nodeBack.appendChild(textBack);
+    var nodeBack = buildBackNode();
     divReport.appendChild(nodeBack);
-    // *************************************************************************
 
     var asTable = false;
     if (asTable) {
         // test json.human.js
         var rpt = JsonHuman.format(message);
-        report.appendChild(rpt);
+        divReport.appendChild(rpt);
     } else {
         // test jjsonviewer.js
         var jjson = document.createElement("div");
@@ -112,10 +106,9 @@ function renderReport(message) {
         $('#jjson').jJsonViewer(message, {expanded: true});
     }
 
-    divErrorsContainer.setAttribute('style', "display:none;");
-    divReport.setAttribute('style', "display:block;");
+    hideErrorsContainer();
+    showReport();
 }
-
 
 
 // UTILS ***********************************************************************
@@ -163,6 +156,15 @@ function buildLinkNode(source) {
     return link;
 }
 
+function buildBackNode() {
+    var back = document.createElement("a");
+    back.setAttribute('href', "#");
+    back.setAttribute('onclick', "back()");
+    var textBack = document.createTextNode("Atras");
+    back.appendChild(textBack);
+    return back;
+}
+
 function addTotalCounter(htmlExceptions) {
     var total = document.createElement("div");
     var textTotal  = document.createTextNode(htmlExceptions.length + " of " + exceptions.length);
@@ -170,8 +172,20 @@ function addTotalCounter(htmlExceptions) {
     divErrors.appendChild(total);
 }
 
+function hideErrorsContainer() {
+    divErrorsContainer.setAttribute('style', "display:none;");
+}
+
 function cleanErrors() {
     divErrors.innerHTML = "";
+}
+
+function cleanReport() {
+    divReport.innerHTML = "";
+}
+
+function showReport() {
+    divReport.setAttribute('style', "display:block;");
 }
 
 function hideFilter() {
@@ -182,9 +196,6 @@ function showFilter() {
     divFilter.setAttribute('style', "display:block;");
 }
 
-/**
-* Check if message is an object.
-**/
 function handleMessage(message) {
     if (typeof message === "object") {
         renderReport(message);
