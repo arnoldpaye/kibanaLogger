@@ -59,6 +59,9 @@ function filter() {
     render(filteredExceptions);
 }
 
+/**
+* Render
+**/
 function render(exceptions) {
     var errorsList = document.createElement("ul");
      // just display at most 100 records
@@ -69,41 +72,14 @@ function render(exceptions) {
     htmlExceptions.forEach(function(exception) {
         var source = exception._source;
         var node = document.createElement("li");
-
-        var text;
-        var linkNode;
-        if (source.message) {
-                if (typeof source.message == "object") {
-                text = source.message.Details.Error.Message;
-                // create error link ***********************************************
-                linkNode = document.createElement('a');
-                linkNode.setAttribute('href', "#");
-                linkNode.setAttribute('onclick', "handleMessage(" + JSON.stringify(source.message) + ")");
-                // *****************************************************************
-                var textNode = document.createTextNode(text);
-                linkNode.appendChild(textNode);
-            } else {
-                text = source.message;
-                linkNode = document.createTextNode(text);
-            }
-        } else if (source.requestpayload) {
-            text = source.requestpayload;
-            linkNode = document.createTextNode(text);
-        }
-
+        var linkNode = buildLinkNode(source);
         node.appendChild(linkNode);
         errorsList.appendChild(node);
     });
 
-    // add total counter *******************************************************
-    var total = document.createElement("div");
-    var textTotal  = document.createTextNode(htmlExceptions.length + " of " + exceptions.length);
-    total.appendChild(textTotal);
-    divErrors.appendChild(total);
-    // *************************************************************************
+    addTotalCounter(htmlExceptions);
     divErrors.appendChild(errorsList);
-    
-    divFilter.setAttribute('style', "display:block;");
+    showFilter();
 }
 
 /**
@@ -142,7 +118,7 @@ function renderReport(message) {
 
 
 
-// UTILS
+// UTILS ***********************************************************************
 function buildQueryString() {
     var queryString = txtQuery.value.trim();
     if (queryString === "") queryString = "*";
@@ -163,6 +139,35 @@ function buildPredicateFunction() {
     if(!filterString) filterString = "true";
     
     return new Function('ro, rs', 'return ('+ filterString +')');
+}
+
+function buildLinkNode(source) {
+    var text;
+    var link;
+    if (source.message) {
+            if (typeof source.message == "object") {
+            text = source.message.Details.Error.Message;
+            link = document.createElement('a');
+            link.setAttribute('href', "#");
+            link.setAttribute('onclick', "handleMessage(" + JSON.stringify(source.message) + ")");
+            var textNode = document.createTextNode(text);
+            link.appendChild(textNode);
+        } else {
+            text = source.message;
+            link = document.createTextNode(text);
+        }
+    } else if (source.requestpayload) {
+        text = source.requestpayload;
+        link = document.createTextNode(text);
+    }
+    return link;
+}
+
+function addTotalCounter(htmlExceptions) {
+    var total = document.createElement("div");
+    var textTotal  = document.createTextNode(htmlExceptions.length + " of " + exceptions.length);
+    total.appendChild(textTotal);
+    divErrors.appendChild(total);
 }
 
 function cleanErrors() {
