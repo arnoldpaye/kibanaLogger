@@ -15,7 +15,7 @@ var todayTime = today.toISOString().split('T')[1];
 txtDate.value = todayDate;
 
 // global exceptions
-var globalExceptions = [];
+var exceptions = [];
 
 /**
 * Search
@@ -26,16 +26,16 @@ function search() {
 
     var queryString = buildQueryString();
     var range = queryRange = buildQueryRange();
-    KibanaLogger.search(queryString, range.from, range.to, afterSearch);
+    KibanaLogger.search(queryString, range.from, range.to, preRender);
 }
 
 /**
-* After search
+* Set exceptions
 **/
-function afterSearch(exceptions) {
-    globalExceptions = exceptions;
+function preRender(es) {
+    exceptions = es;
     showFilter();
-    render(globalExceptions);
+    render(exceptions);
 }
 
 
@@ -45,20 +45,15 @@ function afterSearch(exceptions) {
 function filter() {
     cleanErrors();
 
-    var filterString = txtFilter.value.trim();
-    if(!filterString) filterString = "true";
-    
-    var predFn = new Function('ro, rs', 'return ('+ filterString +')');
+    var predFn = buildPredicateFunction();
 
-    console.log("FILTER STRING", filterString);
     var filteredExceptions = [];
-    globalExceptions.forEach(function(exception) {
+    exceptions.forEach(function(exception) {
         var message = exception._source.message;
         if (typeof message == "object") {
             if (predFn(message, JSON.stringify(message))) {
                 filteredExceptions.push(exception);
             }
-
         }
     });
     render(filteredExceptions);
@@ -161,6 +156,13 @@ function buildQueryRange() {
         from: from,
         to: to 
     }
+}
+
+function buildPredicateFunction() {
+    var filterString = txtFilter.value.trim();
+    if(!filterString) filterString = "true";
+    
+    return new Function('ro, rs', 'return ('+ filterString +')');
 }
 
 function cleanErrors() {
