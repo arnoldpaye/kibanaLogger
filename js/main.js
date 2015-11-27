@@ -1,122 +1,58 @@
-/* ELASTIC SEARCH NON PRODUCTION ENVIRONMENT */
-var elasticSearchHost = "http://172.20.17.80:9200/";
+// Html elements
+var txtQuery = document.getElementById("txtQuery");
+var txtDate = document.getElementById('txtDate');
+var divFilter = document.getElementById("divFilter");
+var txtFilter = document.getElementById("txtFilter");
+var divErrors = document.getElementById("divErrors");
+var divErrorsContainer = document.getElementById("divErrorsContainer");
+var divReport = document.getElementById("divReport");
 
 // get today date value
 var today = new Date();
 var todayDate = today.toISOString().split('T')[0];
 var todayTime = today.toISOString().split('T')[1];
-
 // set txtDate with today date as default value
-document.getElementById('txtDate').value = todayDate;
+txtDate.value = todayDate;
+
+// global exceptions
+var globalExceptions = [];
 
 /**
-* Create query.
-* @param {string} queryString
-* @param {number/timestamp} from
-* @param {number/timestamp} to
+* Search
 **/
-function createQuery(queryString, from, to) {
-    return {
-        "query": {
-            "query_string": {
-                "query": queryString
-            }
-        },
-        "filter": {
-            "range": {
-                "@timestamp": {
-                    "from": from,
-                    "to": to
-                }
-            }
-        },
-        "sort": {
-            "@timestamp": {
-                "order": "desc"
-            }
-        },
-        "size": 500
-    }
+function search() {
+    cleanErrors();
+    hideFilter();
+
+    var queryString = buildQueryString();
+    var range = queryRange = buildQueryRange();
+    KibanaLogger.search(queryString, range.from, range.to, afterSearch);
 }
 
-// global exceptions array
-var exceptions = [];
 /**
-* Search.
-*/
-function search() {
-    //var queryString = 'application:"ST7" AND environment:\"qa1\" AND type:\"jsexception\"'
-    var queryString = document.getElementById("txtQuery").value;
-    // clean exceptions
-    exceptions = [];
-    var errors = document.getElementById("divErrors");
-    var filter = document.getElementById("divFilter");
-    errors.innerHTML = "";
-    filter.setAttribute('style', "display:none;");
-
-    queryString = queryString.trim();
-    if (queryString === "") queryString = "*";
-
-    console.log("queryString", queryString);
-
-    // build urls **************************************************************
-    var to = new Date(document.getElementById('txtDate').value + "T" + todayTime);
-    var from = new Date(to.getTime() - 24*60*60*1000);
-
-    var query = createQuery(queryString, from.getTime(), to.getTime());
-
-    console.log("from", formatDate(from));
-    console.log("to", formatDate(to));
-
-    var fromUrl = elasticSearchHost + "logstash-" + formatDate(from) + "/_search?source=" + JSON.stringify(query);
-    var toUrl = elasticSearchHost + "logstash-" + formatDate(to) + "/_search?source=" + JSON.stringify(query);
-    // *************************************************************************
-
-    var fromErrors = promisedRequest('GET', fromUrl);
-    var toErrors = promisedRequest('GET', toUrl);
-
-    fromErrors.then(function(records) {
-        console.log("total from", records.length);
-        exceptions = exceptions.concat(records);
-        toErrors.then(function(records) {
-            console.log("total to", records.length);
-            exceptions = exceptions.concat(records);
-            console.log("total errors", exceptions.length);
-
-            // Try to convert message property to an object
-            // TODO: this should be done with a fuction
-            exceptions.forEach(function(exception) {
-                if (exception._source.message) {
-                    var message = exception._source.message;
-                    try {
-                        exception._source.message = JSON.parse(message);
-                    } catch (e) {
-                        console.log(e, exception._source.message);
-                    }
-                } else {
-                    console.log("The exception doesn't have a message property.");
-                }
-            });
-
-            renderExceptions(exceptions);
-        });
-    })
+* After search
+**/
+function afterSearch(exceptions) {
+    globalExceptions = exceptions;
+    showFilter();
+    render(globalExceptions);
 }
 
 
 /**
 * Filter
-*/
+**/
 function filter() {
-    var txtFilter = document.getElementById("txtFilter").value;
-    txtFilter = txtFilter.trim();
-    if(!txtFilter) txtFilter = "true";
-    
-    var predFn = new Function('ro, rs', 'return ('+ txtFilter +')');
+    cleanErrors();
 
-    console.log("text filter", txtFilter);
+    var filterString = txtFilter.value.trim();
+    if(!filterString) filterString = "true";
+    
+    var predFn = new Function('ro, rs', 'return ('+ filterString +')');
+
+    console.log("FILTER STRING", filterString);
     var filteredExceptions = [];
-    exceptions.forEach(function(exception) {
+    globalExceptions.forEach(function(exception) {
         var message = exception._source.message;
         if (typeof message == "object") {
             if (predFn(message, JSON.stringify(message))) {
@@ -125,84 +61,15 @@ function filter() {
 
         }
     });
-    renderExceptions(filteredExceptions);
+    render(filteredExceptions);
 }
 
-/**
-* Check if message is an object.
-*/
-function handleMessage(message) {
-    if (typeof message === "object") {
-        renderReport(message);
-    }
-}
-
-/**
-* Render report
-* @param {object} message, exception details.
-*/
-function renderReport(message) {
-    var errorsContainer = document.getElementById("divErrorsContainer");
-    var report = document.getElementById("report");
-    // clean report
-    report.innerHTML = "";
-
-    // create back link ********************************************************
-    var nodeBack = document.createElement("a");
-    nodeBack.setAttribute('href', "#");
-    nodeBack.setAttribute('onclick', "back()");
-    var textBack = document.createTextNode("Atras");
-    nodeBack.appendChild(textBack);
-    report.appendChild(nodeBack);
-    // *************************************************************************
-
-    var asTable = false;
-    if (asTable) {
-        // test json.human.js
-        var rpt = JsonHuman.format(message);
-        report.appendChild(rpt);
-    } else {
-        // test jjsonviewer.js
-        var jjson = document.createElement("div");
-        jjson.setAttribute('id', "jjson");
-        jjson.setAttribute('class', "jjson");
-        report.appendChild(jjson);
-        $('#jjson').jJsonViewer(message, {expanded: true});
-    }
-
-    errorsContainer.setAttribute('style', "display:none;");
-    report.setAttribute('style', "display:block;");
-}
-
-function back() {
-    var errorsContainer = document.getElementById("divErrorsContainer");
-    var report = document.getElementById("report");
-    errorsContainer.setAttribute('style', "display:block;");
-    report.setAttribute('style', "display:none;");
-}
-
-/**
-* Render html for exceptions.
-* @param {Array} exceptions
-* {
-    "id":,
-    "_index":,
-    "score":,
-    "_source":,
-    "type":,
-    "sort":
-  }
-*/
-function renderExceptions(exceptions) {
-    var errors = document.getElementById("divErrors");
-    var filter = document.getElementById("divFilter");
-    errors.innerHTML = "";
+function render(exceptions) {
     var errorsList = document.createElement("ul");
-
-    // just display at most 100 records
+     // just display at most 100 records
     var htmlExceptions = exceptions.slice(0, 100);
-    console.log("exceptions", exceptions.length);
-    console.log("exceptions to display", htmlExceptions.length);
+    console.log("EXCEPTIONS", exceptions.length);
+    console.log("EXCEPTIONS TO DISPLAY", htmlExceptions.length);
 
     htmlExceptions.forEach(function(exception) {
         var source = exception._source;
@@ -237,57 +104,87 @@ function renderExceptions(exceptions) {
     var total = document.createElement("div");
     var textTotal  = document.createTextNode(htmlExceptions.length + " of " + exceptions.length);
     total.appendChild(textTotal);
-    errors.appendChild(total);
+    divErrors.appendChild(total);
     // *************************************************************************
-    errors.appendChild(errorsList);
+    divErrors.appendChild(errorsList);
     
-    filter.setAttribute('style', "display:block;");
+    divFilter.setAttribute('style', "display:block;");
 }
 
 /**
-* @param {string} method
-* @param {string} url
-*/
-function promisedRequest(method, url) {
-    var promise = new Promise(function(resolve, reject) {
-        var xhr = new XMLHttpRequest();
+* Render report
+* @param {object} message, exception details.
+**/
+function renderReport(message) {
+    divReport.innerHTML = "";
 
-        xhr.onload = function() {
-            console.log("onload");
-        };
+    // create back link ********************************************************
+    var nodeBack = document.createElement("a");
+    nodeBack.setAttribute('href', "#");
+    nodeBack.setAttribute('onclick', "back()");
+    var textBack = document.createTextNode("Atras");
+    nodeBack.appendChild(textBack);
+    divReport.appendChild(nodeBack);
+    // *************************************************************************
 
-        xhr.onerror = function() {
-            // TODO: reject it
-            console.log("onerror");
-        }
+    var asTable = false;
+    if (asTable) {
+        // test json.human.js
+        var rpt = JsonHuman.format(message);
+        report.appendChild(rpt);
+    } else {
+        // test jjsonviewer.js
+        var jjson = document.createElement("div");
+        jjson.setAttribute('id', "jjson");
+        jjson.setAttribute('class', "jjson");
+        divReport.appendChild(jjson);
+        $('#jjson').jJsonViewer(message, {expanded: true});
+    }
 
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    var response = JSON.parse(xhr.responseText);
-                    resolve(response.hits.hits);
-                } else {
-                    reject(Error(xhr.statusText));
-                }
-            }
-        }
+    divErrorsContainer.setAttribute('style', "display:none;");
+    divReport.setAttribute('style', "display:block;");
+}
 
-        xhr.open(method, url);
-        xhr.send();
-    });
-    return promise;
+
+
+// UTILS
+function buildQueryString() {
+    var queryString = txtQuery.value.trim();
+    if (queryString === "") queryString = "*";
+    return queryString;
+}
+
+function buildQueryRange() {
+    var to = new Date(txtDate.value.trim() + "T" + todayTime);
+    var from = new Date(to.getTime() - 24*60*60*1000);
+    return {
+        from: from,
+        to: to 
+    }
+}
+
+function cleanErrors() {
+    divErrors.innerHTML = "";
+}
+
+function hideFilter() {
+    divFilter.setAttribute('style', "display:none;");
+}
+
+function showFilter() {
+    divFilter.setAttribute('style', "display:block;");
 }
 
 /**
-* Given a date return a formatted string as: "YYYY.mm.dd",
-* for example: "2015.11.03"
-*/
-function formatDate(date) {
-    var year = date.getFullYear();
-    var month = date.getMonth();
-    var day = date.getDate();
-    month = month + 1;
-    if (month < 10) month = "0" + month;
-    if (day < 10) day = "0" + day;
-    return year + "." + month + "." + day;
+* Check if message is an object.
+**/
+function handleMessage(message) {
+    if (typeof message === "object") {
+        renderReport(message);
+    }
+}
+
+function back() {
+    divErrorsContainer.setAttribute('style', "display:block;");
+    divReport.setAttribute('style', "display:none;");
 }
