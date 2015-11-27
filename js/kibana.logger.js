@@ -1,6 +1,4 @@
 /*((){})();*/
-
-//KibanaLogger as anonymous object literal return
 var KibanaLogger = (function() {
 
     var ELASTIC_SEARCH_HOST = "http://172.20.17.80:9200/";
@@ -10,6 +8,7 @@ var KibanaLogger = (function() {
     * @param {string} queryString
     * @param {number/timestamp} from
     * @param {number/timestamp} to
+    * @return {object}
     **/
     var createElasticQuery = function(queryString, from, to) {
         return {
@@ -32,6 +31,7 @@ var KibanaLogger = (function() {
     * Create elastic url.
     * @param {number/timestamp} date
     * @param {object} query
+    * @return {string}
     **/
     var createElasticUrl = function(date, query) {
         return ELASTIC_SEARCH_HOST + "logstash-" + formatDate(date) + "/_search?source=" + JSON.stringify(query);
@@ -40,6 +40,7 @@ var KibanaLogger = (function() {
     /**
     * @param {string} method
     * @param {string} url
+    * @retur {Promise}
     **/
     var getPromisedRequest = function(method, url) {
         var promise = new Promise(function(resolve, reject) {
@@ -74,6 +75,8 @@ var KibanaLogger = (function() {
     /**
     * Given a date return a formatted string as: "YYYY.mm.dd",
     * for example: "2015.11.03"
+    * @param {object} date
+    * @return {string}
     **/
     var formatDate = function(date) {
         var year = date.getFullYear();

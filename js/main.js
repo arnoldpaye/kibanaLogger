@@ -31,6 +31,7 @@ function search() {
 
 /**
 * Set exceptions
+* @param {object} es
 **/
 function preRender(es) {
     exceptions = es;
@@ -61,6 +62,7 @@ function filter() {
 
 /**
 * Render
+* @param {object} exceptions
 **/
 function render(exceptions) {
     var errorsList = document.createElement("ul");
