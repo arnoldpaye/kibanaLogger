@@ -1,6 +1,6 @@
 // Html elements
 var txtQuery = document.getElementById("txtQuery");
-var txtDate = document.getElementById('txtDate');
+var txtDate = document.getElementById("txtDate");
 var divFilter = document.getElementById("divFilter");
 var txtFilter = document.getElementById("txtFilter");
 var divErrors = document.getElementById("divErrors");
@@ -25,7 +25,7 @@ function search() {
     hideFilter();
 
     var queryString = buildQueryString();
-    var range = queryRange = buildQueryRange();
+    var range = buildQueryRange();
     KibanaLogger.search(queryString, range.from, range.to, preRender);
 }
 
@@ -126,7 +126,7 @@ function buildQueryRange() {
     return {
         from: from,
         to: to 
-    }
+    };
 }
 
 function buildPredicateFunction() {
@@ -141,7 +141,7 @@ function buildLinkNode(source) {
     var link;
     if (source.message) {
             if (typeof source.message == "object") {
-            text = source.message.Details.Error.Message;
+            text = "("+ source["@timestamp"] + ") " + source.message.Details.Error.Message;
             link = document.createElement('a');
             link.setAttribute('href', "#");
             link.setAttribute('onclick', "handleMessage(" + JSON.stringify(source.message) + ")");

@@ -24,7 +24,7 @@ var KibanaLogger = (function() {
                 "@timestamp": {"order": "desc"}
             },
             "size": 500
-        }
+        };
     };
 
     /**
@@ -53,7 +53,7 @@ var KibanaLogger = (function() {
             xhr.onerror = function() {
                 // TODO: reject it
                 console.log("onerror");
-            }
+            };
 
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
@@ -64,13 +64,13 @@ var KibanaLogger = (function() {
                         reject(Error(xhr.statusText));
                     }
                 }
-            }
+            };
 
             xhr.open(method, url);
             xhr.send();
         });
         return promise;
-    }
+    };
 
     /**
     * Given a date return a formatted string as: "YYYY.mm.dd",
@@ -128,7 +128,7 @@ var KibanaLogger = (function() {
                     });
                     callback(exceptions);
                 });
-            })
+            });
         }
-    }
+    };
 })();
