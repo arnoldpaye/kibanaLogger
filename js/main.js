@@ -7,12 +7,19 @@ var divErrors = document.getElementById("divErrors");
 var divErrorsContainer = document.getElementById("divErrorsContainer");
 var divReport = document.getElementById("divReport");
 
-// get today date value
+// Dates
 var today = new Date();
-var todayDate = today.toISOString().split('T')[0];
-var todayTime = today.toISOString().split('T')[1];
-// set txtDate with today date as default value
-txtDate.value = todayDate;
+var yesterday = new Date(today.getTime() - 24*60*60*1000);
+
+var toDate = today.toISOString().split('T')[0];
+var toTime = today.toISOString().split('T')[1];
+var fromDate = yesterday.toISOString().split('T')[0];
+var fromTime = yesterday.toISOString().split('T')[1];
+
+// set txtToDate with today date as default value
+txtToDate.value = toDate;
+// set txtFromDate with yesterday date as default value
+txtFromDate.value = fromDate;
 
 // global exceptions
 var exceptions = [];
@@ -38,7 +45,6 @@ function preRender(es) {
     showFilter();
     render(exceptions);
 }
-
 
 /**
 * Filter
@@ -120,12 +126,9 @@ function buildQueryString() {
     return queryString;
 }
 
-/**
-* @param {number} daysBefore How many days before now?
-*/
-function buildQueryRange(daysBefore) {
-    var to = new Date(txtDate.value.trim() + "T" + todayTime);
-    var from = new Date(to.getTime() - daysBefore*24*60*60*1000);
+function buildQueryRange() {
+    var to = new Date(txtToDate.value.trim() + "T" + toTime);
+    var from = new Date(txtFromDate.value.trim() + "T" + fromTime);
     return {
         from: from,
         to: to 
