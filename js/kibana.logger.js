@@ -103,6 +103,7 @@ var KibanaLogger = (function() {
             var eDate;
             var eDateUrl;
             var eErrors = [];
+            var messages = [];
 
             for (i = from.getTime(); i <= to.getTime(); i += 86400000) {
                 eDate = new Date(i);
@@ -120,6 +121,7 @@ var KibanaLogger = (function() {
                         var message = exception._source.message;
                         try {
                             exception._source.message = JSON.parse(message);
+                            messages.push(exception._source.message.Details.Error.Message);
                         } catch (e) {
                             console.log(e, exception._source.message);
                         }
@@ -127,6 +129,22 @@ var KibanaLogger = (function() {
                         console.log("The exception doesn't have a message property.");
                     }
                 });
+
+                ////////////////////////////////////////////////////////////////
+                console.log(messages.length);
+
+                var result = messages.reduce(function(p, c) {
+                    if (c in p) {
+                        p[c]++;
+                    } else {
+                        p[c] = 1;
+                    }
+                    return p;
+                }, {});
+
+                console.log(result);
+                ////////////////////////////////////////////////////////////////
+
                 callback(exceptions);
             }, function(exc) {
                 console.log("EXC" , exc);
