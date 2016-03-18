@@ -25,7 +25,7 @@ function search() {
     hideFilter();
 
     var queryString = buildQueryString();
-    var range = buildQueryRange();
+    var range = buildQueryRange(1);
     KibanaLogger.search(queryString, range.from, range.to, preRender);
 }
 
@@ -120,9 +120,12 @@ function buildQueryString() {
     return queryString;
 }
 
-function buildQueryRange() {
+/**
+* @param {number} daysBefore How many days before now?
+*/
+function buildQueryRange(daysBefore) {
     var to = new Date(txtDate.value.trim() + "T" + todayTime);
-    var from = new Date(to.getTime() - 24*60*60*1000);
+    var from = new Date(to.getTime() - daysBefore*24*60*60*1000);
     return {
         from: from,
         to: to 

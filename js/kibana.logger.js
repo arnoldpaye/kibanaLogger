@@ -98,36 +98,38 @@ var KibanaLogger = (function() {
         */
         search: function(queryString, from, to, callback) {
             var elasticQuery = createElasticQuery(queryString, from, to);
-            var fromUrl = createElasticUrl(from, elasticQuery);
-            var toUrl = createElasticUrl(to, elasticQuery);
             var exceptions = [];
-            
-            var fromErrors = getPromisedRequest('GET', fromUrl);
-            var toErrors = getPromisedRequest('GET', toUrl);
-            fromErrors.then(function(records) {
-                //console.log("total from", records.length);
-                exceptions = exceptions.concat(records);
-                toErrors.then(function(records) {
-                    //console.log("total to", records.length);
-                    exceptions = exceptions.concat(records);
-                    console.log("TOTAL EXCEPTIONS", exceptions.length);
+            var i;
+            var eDate;
+            var eDateUrl;
+            var eErrors = [];
 
-                    // Try to convert message property to an object
-                    // TODO: this should be done with a fuction
-                    exceptions.forEach(function(exception) {
-                        if (exception._source.message) {
-                            var message = exception._source.message;
-                            try {
-                                exception._source.message = JSON.parse(message);
-                            } catch (e) {
-                                console.log(e, exception._source.message);
-                            }
-                        } else {
-                            console.log("The exception doesn't have a message property.");
+            for (i = from.getTime(); i <= to.getTime(); i += 86400000) {
+                eDate = new Date(i);
+                eDateUrl = createElasticUrl(eDate, elasticQuery);
+                eErrors.push(getPromisedRequest('GET', eDateUrl));
+            }
+
+            Promise.all(eErrors).then(function(values) {
+                for (i = 0; i < values.length; i++) {
+                    exceptions = exceptions.concat(values[i]);
+                }
+                // TODO: this should be done with a fuction
+                exceptions.forEach(function(exception) {
+                    if (exception._source.message) {
+                        var message = exception._source.message;
+                        try {
+                            exception._source.message = JSON.parse(message);
+                        } catch (e) {
+                            console.log(e, exception._source.message);
                         }
-                    });
-                    callback(exceptions);
+                    } else {
+                        console.log("The exception doesn't have a message property.");
+                    }
                 });
+                callback(exceptions);
+            }, function(exc) {
+                console.log("EXC" , exc);
             });
         }
     };
