@@ -1,6 +1,7 @@
 /*((){})();*/
 var KibanaLogger = (function() {
 
+    // NON PRODUCTION ENVIRONMENTS
     var ELASTIC_SEARCH_HOST = "http://172.20.17.80:9200/";
 
     /**
